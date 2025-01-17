@@ -13,9 +13,10 @@ func (app *Config) routes() http.Handler {
 
 	// set up middleware
 	mux.Use(middleware.Recoverer) // recover from panics
+	mux.Use(app.SessionLoad)      // load and save session data
 
 	// set up routes
-	mux.Get("/", app.HomePage)
+	mux.Get("/", app.GETHomePage)
 
 	return mux
 }

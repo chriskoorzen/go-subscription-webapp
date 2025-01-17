@@ -4,9 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"time"
 
+	"github.com/alexedwards/scs/redisstore"
+	"github.com/alexedwards/scs/v2"
+	"github.com/gomodule/redigo/redis"
 	_ "github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -19,6 +23,8 @@ func main() {
 	fmt.Println(db)
 
 	// create sessions
+	session := initSession()
+	fmt.Println(session)
 
 	// create channels
 
@@ -78,4 +84,27 @@ func openDB(dsn string) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func initSession() *scs.SessionManager {
+	session := scs.New()
+	session.Store = redisstore.New(initRedis()) // Use Redis to store session data
+
+	// Set session options
+	session.Lifetime = 24 * time.Hour              // 24 hours before session expires
+	session.Cookie.Persist = true                  // Persist session even after browser is closed
+	session.Cookie.SameSite = http.SameSiteLaxMode // SameSite cookie policy
+	session.Cookie.Secure = true                   // Secure cookie policy
+
+	return session
+}
+
+func initRedis() *redis.Pool {
+	redisPool := &redis.Pool{
+		MaxIdle: 10,
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", os.Getenv("REDIS")) // Redis connection string
+		},
+	}
+	return redisPool
 }

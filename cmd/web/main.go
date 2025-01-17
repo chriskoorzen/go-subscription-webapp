@@ -13,6 +13,7 @@ import (
 
 	"github.com/alexedwards/scs/redisstore"
 	"github.com/alexedwards/scs/v2"
+	"github.com/chriskoorzen/go-subscription-webapp/cmd/web/db"
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -22,7 +23,7 @@ func main() {
 	fmt.Println("Hello, Subscription Service!")
 
 	// connect to database
-	db := initDB()
+	database := initDB()
 
 	// create sessions
 	session := initSession()
@@ -39,10 +40,11 @@ func main() {
 	// setup app config
 	app := Config{
 		Session:  session,
-		DB:       db,
+		DB:       database,
 		Wait:     &wg,
 		InfoLog:  infoLog,
 		ErrorLog: errorLog,
+		Models:   db.New(database),
 	}
 
 	// set up mail

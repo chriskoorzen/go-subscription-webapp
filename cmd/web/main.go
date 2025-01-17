@@ -42,11 +42,11 @@ func main() {
 		InfoLog:  infoLog,
 		ErrorLog: errorLog,
 	}
-	fmt.Println(app)
 
 	// set up mail
 
 	// listen for connections
+	app.serve()
 }
 
 func initDB() *sql.DB {
@@ -119,4 +119,18 @@ func initRedis() *redis.Pool {
 		},
 	}
 	return redisPool
+}
+
+func (app *Config) serve() {
+	// start http server
+	server := &http.Server{
+		Addr:    ":8811",
+		Handler: app.routes(),
+	}
+
+	app.InfoLog.Println("Starting server on port :8811")
+	err := server.ListenAndServe()
+	if err != nil {
+		log.Panic(err)
+	}
 }

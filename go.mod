@@ -1,4 +1,4 @@
-module chriskoorzen.com/go-subscription-webapp
+module github.com/chriskoorzen/go-subscription-webapp
 
 go 1.22.2
 

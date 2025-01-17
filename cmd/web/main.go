@@ -14,6 +14,7 @@ import (
 	"github.com/alexedwards/scs/redisstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/chriskoorzen/go-subscription-webapp/cmd/web/db"
+	"github.com/fatih/color"
 	"github.com/gomodule/redigo/redis"
 	_ "github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -29,8 +30,8 @@ func main() {
 	session := initSession()
 
 	// Create loggers
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	infoLog := log.New(os.Stdout, color.GreenString("[INFO\t] "), log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stdout, color.RedString("[ERROR\t] "), log.Ldate|log.Ltime|log.Lshortfile)
 
 	// create channels
 

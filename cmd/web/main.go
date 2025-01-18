@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
@@ -109,6 +110,10 @@ func openDB(dsn string) (*sql.DB, error) {
 }
 
 func initSession() *scs.SessionManager {
+	// register custom types
+	gob.Register(db.User{})
+
+	// Create a new session manager and store it in the Config struct
 	session := scs.New()
 	session.Store = redisstore.New(initRedis()) // Use Redis to store session data
 

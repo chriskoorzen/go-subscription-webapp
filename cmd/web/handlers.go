@@ -43,6 +43,13 @@ func (app *Config) POSTLoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if user.Active == 0 {
+		app.ErrorLog.Printf("User account %d not activated\n", user.ID)
+		app.Session.Put(r.Context(), "error", "Account not activated") // store error message in session
+		http.Redirect(w, r, "/login", http.StatusSeeOther)             // redirect back to login page
+		return
+	}
+
 	validPassword, err := user.PasswordMatches(password)
 	if err != nil {
 		app.Session.Put(r.Context(), "error", "Invalid credentials") // store error message in session
@@ -147,5 +154,39 @@ func (app *Config) POSTRegisterPage(w http.ResponseWriter, r *http.Request) {
 // so we can verify their email address
 func (app *Config) GETActivateAccount(w http.ResponseWriter, r *http.Request) {
 	app.InfoLog.Printf("GET %s\n", r.URL.Path)
-	// TODO
+
+	// validate url
+	url := r.RequestURI
+	testUrl := fmt.Sprintf("%s%s", "http://localhost:8811", url) // TODO - get this from environment variable
+	okay := VerifyToken(testUrl)
+
+	if !okay {
+		app.ErrorLog.Println("Invalid activation token")
+		app.Session.Put(r.Context(), "error", "Invalid token")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// activate account
+	u, err := app.Models.User.GetByEmail(r.URL.Query().Get("email"))
+	if err != nil {
+		app.ErrorLog.Println("Error getting user by email: ", err)
+		app.Session.Put(r.Context(), "error", "No user found")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	u.Active = 1
+	err = u.Update()
+	if err != nil {
+		app.ErrorLog.Println("Unable to update user ", err)
+		app.Session.Put(r.Context(), "error", "Activation failed")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// success
+	app.SuccessLog.Printf("User %d activated account", u.ID)
+	app.Session.Put(r.Context(), "flash", "Account activated. Please log in.")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

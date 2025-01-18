@@ -1,2 +1,5 @@
 # Local data files for redis and postgres
 db-data/*
+
+# Local environment variables
+.env

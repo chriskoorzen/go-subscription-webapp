@@ -24,9 +24,9 @@ func GenerateTokenFromString(data string) string {
 
 	s := goalone.New(secretKey, goalone.Timestamp)
 	if strings.Contains(data, "?") {
-		urlToSign = fmt.Sprintf("%s&hash=", data)
+		urlToSign = fmt.Sprintf("%s&hash=", data) // append hash to existing query string
 	} else {
-		urlToSign = fmt.Sprintf("%s?hash=", data)
+		urlToSign = fmt.Sprintf("%s?hash=", data) // append hash to query string
 	}
 
 	tokenBytes := s.Sign([]byte(urlToSign))

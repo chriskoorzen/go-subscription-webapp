@@ -1,7 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"text/template"
+
+	"github.com/chriskoorzen/go-subscription-webapp/cmd/web/db"
 )
 
 func (app *Config) GETHomePage(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +96,51 @@ func (app *Config) GETRegisterPage(w http.ResponseWriter, r *http.Request) {
 
 func (app *Config) POSTRegisterPage(w http.ResponseWriter, r *http.Request) {
 	app.InfoLog.Printf("POST %s\n", r.URL.Path)
-	// TODO
+
+	err := r.ParseForm()
+	if err != nil {
+		app.ErrorLog.Println("Error parsing form: ", err)
+		app.Session.Put(r.Context(), "error", "Unable to create account.")
+		http.Redirect(w, r, "/register", http.StatusSeeOther)
+		return
+	}
+
+	// TODO Validate form data
+
+	// create a new user
+	u := db.User{
+		Email:     r.PostForm.Get("email"),
+		FirstName: r.PostForm.Get("first-name"),
+		LastName:  r.PostForm.Get("last-name"),
+		Password:  r.PostForm.Get("password"),
+		IsAdmin:   0,
+		Active:    0,
+	}
+
+	userID, err := app.Models.User.Insert(u)
+	if err != nil {
+		app.ErrorLog.Println("Error inserting user: ", err)
+		app.Session.Put(r.Context(), "error", "Unable to create account.")
+		http.Redirect(w, r, "/register", http.StatusSeeOther)
+		return
+	}
+
+	// send activation email
+	url := fmt.Sprintf("%s/activate-account?email=%s", "http://localhost:8811", u.Email) // TODO - get this from environment variable
+	signedURL := GenerateTokenFromString(url)
+
+	msg := Message{
+		To:       u.Email,
+		Subject:  "Activate your account",
+		Template: "confirmation-email",
+		Data:     template.HTMLEscapeString(signedURL),
+	}
+	app.sendEmail(msg)
+
+	app.Session.Put(r.Context(), "flash", "Account created. Please check your email to activate your account.")
+	app.SuccessLog.Println("User created with ID: ", userID)
+
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 // Sent once the user has successfully registered

@@ -31,6 +31,7 @@ func main() {
 
 	// Create loggers
 	infoLog := log.New(os.Stdout, color.GreenString("[INFO\t] "), log.Ldate|log.Ltime)
+	successLog := log.New(os.Stdout, color.CyanString("[SUCCESS] "), log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, color.RedString("[ERROR\t] "), log.Ldate|log.Ltime|log.Lshortfile)
 
 	// create channels
@@ -40,12 +41,13 @@ func main() {
 
 	// setup app config
 	app := Config{
-		Session:  session,
-		DB:       database,
-		Wait:     &wg,
-		InfoLog:  infoLog,
-		ErrorLog: errorLog,
-		Models:   db.New(database),
+		Session:    session,
+		DB:         database,
+		Wait:       &wg,
+		InfoLog:    infoLog,
+		SuccessLog: successLog,
+		ErrorLog:   errorLog,
+		Models:     db.New(database),
 	}
 
 	// set up mail

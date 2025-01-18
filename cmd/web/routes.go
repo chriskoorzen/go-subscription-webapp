@@ -23,6 +23,20 @@ func (app *Config) routes() http.Handler {
 	mux.Get("/register", app.GETRegisterPage)
 	mux.Post("/register", app.POSTRegisterPage)
 	mux.Get("/activate-account", app.GETActivateAccount)
+
+	mux.Mount("/members", app.authRouter())
+
+	return mux
+}
+
+func (app *Config) authRouter() http.Handler {
+	// create a new chi router
+	mux := chi.NewRouter()
+
+	// set up middleware
+	mux.Use(app.Auth)
+
+	// set up protected routes
 	mux.Get("/plans", app.GETSubscriptionPlans)
 	// mux.Post("/subscribe", app.POSTSubscribePage)
 

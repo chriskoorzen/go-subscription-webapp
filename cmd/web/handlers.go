@@ -191,15 +191,9 @@ func (app *Config) GETActivateAccount(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
+// Protected route
 func (app *Config) GETSubscriptionPlans(w http.ResponseWriter, r *http.Request) {
 	app.InfoLog.Printf("GET %s\n", r.URL.Path)
-
-	// is logged in?
-	if !app.Session.Exists(r.Context(), "userID") {
-		app.Session.Put(r.Context(), "warning", "Please log in to access this page")
-		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-		return
-	}
 
 	// get plans
 	plans, err := app.Models.Plan.GetAll()

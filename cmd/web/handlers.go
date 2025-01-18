@@ -190,3 +190,31 @@ func (app *Config) GETActivateAccount(w http.ResponseWriter, r *http.Request) {
 	app.Session.Put(r.Context(), "flash", "Account activated. Please log in.")
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
+
+func (app *Config) GETSubscriptionPlans(w http.ResponseWriter, r *http.Request) {
+	app.InfoLog.Printf("GET %s\n", r.URL.Path)
+
+	// is logged in?
+	if !app.Session.Exists(r.Context(), "userID") {
+		app.Session.Put(r.Context(), "warning", "Please log in to access this page")
+		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+		return
+	}
+
+	// get plans
+	plans, err := app.Models.Plan.GetAll()
+	if err != nil {
+		app.ErrorLog.Println("Error getting plans: ", err)
+		app.Session.Put(r.Context(), "error", "Unable to get plans")
+		// TODO implement error page
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	dataMap := make(map[string]interface{})
+	dataMap["plans"] = plans
+
+	app.render(w, r, "plans.page.gohtml", &TemplateData{
+		Data: dataMap,
+	})
+}

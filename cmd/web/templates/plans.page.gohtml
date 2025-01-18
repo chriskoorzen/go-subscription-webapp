@@ -1,0 +1,62 @@
+{{template "base" .}}
+
+{{define "content" }}
+    {{$user := .User}}
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <h1 class="mt-5">Plans</h1>
+                <hr>
+                <table class="table table-compact table-striped">
+                    <thead>
+                    <tr>
+                        <th scope="col">Plan</th>
+                        <th class="text-center" scope="col">Price</th>
+                        <th class="text-center" scope="col">Select</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{range index .Data "plans"}}
+                        <tr>
+                            <td>{{.PlanName}}</td>
+                            <td class="text-center">{{.PlanAmountFormatted}}/month</td>
+                            <td class="text-center">
+                            {{if and ($user.Plan) (eq $user.Plan.ID .ID)}}
+                                <strong>Current Plan</strong>
+                            {{else}}
+                                <a 
+                                href="#" 
+                                class="btn btn-primary btn-sm" 
+                                onclick="selectPlan({{.ID}}, '{{.PlanName}}')">
+                                    Select
+                                </a>
+                            {{end}}
+                            </td>
+                        </tr>
+                    {{end}}
+                    </tbody>
+            </div>
+
+        </div>
+    </div>
+{{end}}
+
+{{define "js"}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.15.10/dist/sweetalert2.all.min.js"></script>
+    <script>
+        selectPlan = (planID, planName) => {
+            Swal.fire({
+                title: 'Confirm Plan Selection',
+                html: `Are you sure you want to select the <strong>${planName}</strong> plan?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, select plan!',
+                cancelButtonText: 'No, cancel!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    {{/* window.location.href = `/subscribe?plan=${planID}` */}}
+                }
+            })
+        }
+    </script>
+{{end}}

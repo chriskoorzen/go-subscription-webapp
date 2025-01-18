@@ -141,7 +141,7 @@ func initRedis() *redis.Pool {
 }
 
 func (app *Config) initMailer() Mail {
-
+	app.InfoLog.Println("Starting email service...")
 	m := Mail{
 		// TODO - get these from environment variables
 		Domain:     "localhost",
@@ -192,5 +192,13 @@ func (app *Config) shutdown() {
 	// block until waitgroup counter is 0
 	app.Wait.Wait()
 
-	app.InfoLog.Println("All background processes finished. Shutting down...")
+	app.Mailer.DoneChan <- true // send signal to stop mailer goroutine
+
+	// close channels
+	close(app.Mailer.MailerChan)
+	close(app.Mailer.ErrorChan)
+	close(app.Mailer.DoneChan)
+
+	time.Sleep(2 * time.Second) // wait for 2 seconds
+	app.InfoLog.Println("All background processes finished. Shut down complete.")
 }

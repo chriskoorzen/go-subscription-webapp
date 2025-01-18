@@ -45,7 +45,7 @@ func (app *Config) listenForMail() {
 		case err := <-app.Mailer.ErrorChan:
 			app.ErrorLog.Println("Error sending email: ", err)
 		case <-app.Mailer.DoneChan:
-			app.InfoLog.Println("Shutting down email listener...")
+			app.InfoLog.Println("Stopping email service...")
 			return // exit goroutine
 		}
 	}

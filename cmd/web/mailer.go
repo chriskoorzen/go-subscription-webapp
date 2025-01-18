@@ -37,9 +37,29 @@ type Message struct { // Email message
 	Template    string
 }
 
-// TODO function to listen for messages to send on MailerChan
+func (app *Config) listenForMail() {
+	for {
+		select {
+		case msg := <-app.Mailer.MailerChan:
+			go app.Mailer.Send(msg, app.Mailer.ErrorChan)
+		case err := <-app.Mailer.ErrorChan:
+			app.ErrorLog.Println("Error sending email: ", err)
+		case <-app.Mailer.DoneChan:
+			app.InfoLog.Println("Shutting down email listener...")
+			return // exit goroutine
+		}
+	}
+}
+
+// Helpful wrapper function to send email
+func (app *Config) sendEmail(msg Message) {
+	app.Wait.Add(1)
+	app.Mailer.MailerChan <- msg
+}
 
 func (m *Mail) Send(msg Message, errorChan chan error) {
+	defer m.Wait.Done()
+
 	// set defaults
 	if msg.Template == "" {
 		msg.Template = "mail" // capture default template name

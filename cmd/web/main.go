@@ -54,6 +54,8 @@ func main() {
 	}
 
 	// set up mail
+	app.Mailer = app.initMailer()
+	go app.listenForMail()
 
 	// listen for shutdown signal
 	go app.listenForShutDown()
@@ -136,6 +138,28 @@ func initRedis() *redis.Pool {
 		},
 	}
 	return redisPool
+}
+
+func (app *Config) initMailer() Mail {
+
+	m := Mail{
+		// TODO - get these from environment variables
+		Domain:     "localhost",
+		Host:       "localhost",
+		Port:       1025,
+		Encryption: "none",
+		// Username:    "",
+		// Password:    "",
+		FromName:    "Info",
+		FromAddress: "info@mycompany.com",
+
+		Wait:       app.Wait,                // same as the app waitgroup (global waitgroup)
+		MailerChan: make(chan Message, 100), // buffered channel
+		ErrorChan:  make(chan error),
+		DoneChan:   make(chan bool),
+	}
+
+	return m
 }
 
 func (app *Config) serve() {

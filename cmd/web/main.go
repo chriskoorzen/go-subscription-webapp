@@ -37,7 +37,9 @@ func main() {
 
 	// create channels
 
-	// create waitgroup
+	// Create waitgroup - part of the graceful shutdown protocol.
+	// Spawned background processes increment the waitgroup counter, and decrement it when they finish.
+	// When the server receives a shutdown signal, it waits for the waitgroup counter to reach 0
 	wg := sync.WaitGroup{}
 
 	// setup app config

@@ -39,9 +39,7 @@ func (app *Config) POSTLoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// fmt.Println(password, user.Password)
 	validPassword, err := user.PasswordMatches(password)
-	// fmt.Println(validPassword)
 	if err != nil {
 		app.Session.Put(r.Context(), "error", "Invalid credentials") // store error message in session
 		app.ErrorLog.Println("Error comparing passwords: ", err)     // log error

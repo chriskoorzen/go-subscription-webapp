@@ -60,14 +60,23 @@ func (app *Config) POSTLoginPage(w http.ResponseWriter, r *http.Request) {
 	app.Session.Put(r.Context(), "user", user)      // store user data in session
 	app.Session.Put(r.Context(), "flash", "You've been logged in successfully")
 
-	app.SuccessLog.Printf("User %d logged in successfully", user.ID)
+	app.SuccessLog.Printf("User %d logged in", user.ID)
 	// Redirect to "successs page
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (app *Config) GETLogout(w http.ResponseWriter, r *http.Request) {
 	app.InfoLog.Printf("GET %s\n", r.URL.Path)
-	// TODO
+
+	userID := app.Session.GetInt(r.Context(), "userID")
+
+	// Clean up session
+	app.Session.Destroy(r.Context())
+	app.Session.RenewToken(r.Context())
+
+	app.SuccessLog.Printf("User %d logged out", userID)
+	// Redirect to login page
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (app *Config) GETRegisterPage(w http.ResponseWriter, r *http.Request) {

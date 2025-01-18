@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"text/template"
 	"time"
+
+	"github.com/chriskoorzen/go-subscription-webapp/cmd/web/db"
 )
 
 var pathToTemplates = "./cmd/web/templates"
@@ -20,6 +22,7 @@ type TemplateData struct {
 	Error         string
 	Authenticated bool
 	Now           time.Time
+	User          *db.User
 }
 
 func (app *Config) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) {
@@ -62,8 +65,15 @@ func (app *Config) AddDefaultData(td *TemplateData, r *http.Request) *TemplateDa
 	td.Error = app.Session.PopString(r.Context(), "error")     // get the error message from the session
 	if app.IsAuthenticated(r) {
 		td.Authenticated = true
-		// TODO Get other user info and add it to the template data
+		// Get other user info and add it to the template data
+		user, ok := app.Session.Get(r.Context(), "user").(db.User)
+		if !ok {
+			app.ErrorLog.Println("Error loading user from session")
+		} else {
+			td.User = &user
+		}
 	}
+	td.Now = time.Now() // add the current time to the template data
 
 	return td
 }

@@ -41,8 +41,8 @@ func (p *Plan) GetAll() ([]*Plan, error) {
 			&plan.CreatedAt,
 			&plan.UpdatedAt,
 		)
-
 		plan.PlanAmountFormatted = plan.AmountForDisplay()
+
 		if err != nil {
 			log.Println("Error scanning", err)
 			return nil, err
@@ -71,6 +71,7 @@ func (p *Plan) GetOne(id int) (*Plan, error) {
 		&plan.CreatedAt,
 		&plan.UpdatedAt,
 	)
+	plan.PlanAmountFormatted = plan.AmountForDisplay()
 
 	if err != nil {
 		return nil, err

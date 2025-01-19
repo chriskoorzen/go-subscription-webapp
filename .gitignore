@@ -1,5 +1,8 @@
 # Local data files for redis and postgres
 db-data/*
 
+# Local pdf creation
+tmp/*
+
 # Local environment variables
 .env

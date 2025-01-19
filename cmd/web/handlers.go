@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"text/template"
+	"time"
 
 	"github.com/chriskoorzen/go-subscription-webapp/cmd/web/db"
 )
@@ -215,11 +216,11 @@ func (app *Config) GETSubscriptionPlans(w http.ResponseWriter, r *http.Request) 
 }
 
 // Protected route
-func (app *Config) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
-	app.InfoLog.Printf("POST %s\n", r.URL.Path)
+func (app *Config) GETSubscribeToPlan(w http.ResponseWriter, r *http.Request) {
+	app.InfoLog.Printf("GET %s\n", r.URL.Path)
 
 	// get id of chosen plan
-	id := r.URL.Query().Get("id")
+	id := r.URL.Query().Get("plan")
 	planID, err := strconv.Atoi(id)
 	if err != nil {
 		app.ErrorLog.Println("Error getting plan: ", err)
@@ -266,8 +267,35 @@ func (app *Config) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 		app.sendEmail(msg)
 	}()
 
-	// generate a manual
-	// send email with manual attached
+	// generate a manual and send email with manual attached
+	app.Wait.Add(1)
+	go func() {
+		defer app.Wait.Done()
+
+		pdf := app.GenerateManual(user, plan)
+		filePath := fmt.Sprintf("./tmp/%s_%d_manual.pdf", time.Now().Format("2006-01-02-15:04"), user.ID)
+		err := pdf.OutputFileAndClose(filePath)
+		if err != nil {
+			app.ErrorChan <- fmt.Errorf("error generating manual: %v", err)
+			return
+		}
+		msg := Message{
+			To:      user.Email,
+			Subject: "Your Manual",
+			Data:    "Please find your manual attached.",
+			AttachmentMap: map[string]string{
+				"manual.pdf": filePath,
+			},
+		}
+		app.sendEmail(msg)
+
+		// test error chan
+		app.ErrorChan <- fmt.Errorf("test error")
+	}()
+
 	// subscribe user to plan
+
 	// redirect to success page
+	app.Session.Put(r.Context(), "flash", "Subscribed successfully")
+	http.Redirect(w, r, "/members/plans", http.StatusSeeOther)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"text/template"
 
 	"github.com/chriskoorzen/go-subscription-webapp/cmd/web/db"
@@ -211,4 +212,62 @@ func (app *Config) GETSubscriptionPlans(w http.ResponseWriter, r *http.Request) 
 	app.render(w, r, "plans.page.gohtml", &TemplateData{
 		Data: dataMap,
 	})
+}
+
+// Protected route
+func (app *Config) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
+	app.InfoLog.Printf("POST %s\n", r.URL.Path)
+
+	// get id of chosen plan
+	id := r.URL.Query().Get("id")
+	planID, err := strconv.Atoi(id)
+	if err != nil {
+		app.ErrorLog.Println("Error getting plan: ", err)
+		app.Session.Put(r.Context(), "error", "Unable to get plan")
+		http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
+		return
+	}
+
+	plan, err := app.Models.Plan.GetOne(planID)
+	if err != nil {
+		app.ErrorLog.Println("Error getting plan: ", err)
+		app.Session.Put(r.Context(), "error", "Unable to get plan")
+		http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
+		return
+	}
+
+	// get user from session
+	user, ok := app.Session.Get(r.Context(), "user").(db.User)
+	if !ok {
+		app.ErrorLog.Println("Error getting user from session")
+		app.Session.Put(r.Context(), "error", "Log in to access this page")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	// generate an invoice and send email with invoice attached
+	app.Wait.Add(1)
+
+	go func() {
+		defer app.Wait.Done()
+
+		invoice, err := app.GenerateInvoice(user, plan)
+		if err != nil {
+			app.ErrorChan <- fmt.Errorf("error generating invoice: %v", err)
+		}
+
+		// send email with invoice attached
+		msg := Message{
+			To:       user.Email,
+			Subject:  "Your Invoice",
+			Template: "invoice-email",
+			Data:     invoice,
+		}
+		app.sendEmail(msg)
+	}()
+
+	// generate a manual
+	// send email with manual attached
+	// subscribe user to plan
+	// redirect to success page
 }

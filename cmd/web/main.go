@@ -44,18 +44,23 @@ func main() {
 
 	// setup app config
 	app := Config{
-		Session:    session,
-		DB:         database,
-		Wait:       &wg,
-		InfoLog:    infoLog,
-		SuccessLog: successLog,
-		ErrorLog:   errorLog,
-		Models:     db.New(database),
+		Session:       session,
+		DB:            database,
+		Wait:          &wg,
+		InfoLog:       infoLog,
+		SuccessLog:    successLog,
+		ErrorLog:      errorLog,
+		Models:        db.New(database),
+		ErrorChan:     make(chan error),
+		ErrorChanDone: make(chan bool),
 	}
 
 	// set up mail
 	app.Mailer = app.initMailer()
 	go app.listenForMail()
+
+	// listen for errors
+	go app.listenForErrors()
 
 	// listen for shutdown signal
 	go app.listenForShutDown()
@@ -192,13 +197,27 @@ func (app *Config) shutdown() {
 	// block until waitgroup counter is 0
 	app.Wait.Wait()
 
-	app.Mailer.DoneChan <- true // send signal to stop mailer goroutine
+	// send signals to stop goroutines
+	app.Mailer.DoneChan <- true // stop mailer goroutine
+	app.ErrorChanDone <- true   // stop error goroutine
 
 	// close channels
 	close(app.Mailer.MailerChan)
 	close(app.Mailer.ErrorChan)
 	close(app.Mailer.DoneChan)
+	close(app.ErrorChan)
 
 	time.Sleep(2 * time.Second) // wait for 2 seconds
 	app.InfoLog.Println("All background processes finished. Shut down complete.")
+}
+
+func (app *Config) listenForErrors() {
+	for {
+		select {
+		case err := <-app.ErrorChan:
+			app.ErrorLog.Println(err)
+		case <-app.ErrorChanDone:
+			return
+		}
+	}
 }

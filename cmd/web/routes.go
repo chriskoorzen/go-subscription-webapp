@@ -38,7 +38,7 @@ func (app *Config) authRouter() http.Handler {
 
 	// set up protected routes
 	mux.Get("/plans", app.GETSubscriptionPlans)
-	// mux.Post("/subscribe", app.POSTSubscribePage)
+	mux.Get("/subscribe", app.GETSubscribeToPlan)
 
 	return mux
 }

@@ -288,9 +288,6 @@ func (app *Config) GETSubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 			},
 		}
 		app.sendEmail(msg)
-
-		// test error chan
-		app.ErrorChan <- fmt.Errorf("test error")
 	}()
 
 	// subscribe user to plan

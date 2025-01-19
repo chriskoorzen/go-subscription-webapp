@@ -207,7 +207,7 @@ func (app *Config) shutdown() {
 	close(app.Mailer.DoneChan)
 	close(app.ErrorChan)
 
-	time.Sleep(2 * time.Second) // wait for 2 seconds
+	time.Sleep(800 * time.Millisecond) // wait for 0.8 seconds
 	app.InfoLog.Println("All background processes finished. Shut down complete.")
 }
 

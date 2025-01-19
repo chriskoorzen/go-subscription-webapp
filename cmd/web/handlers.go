@@ -291,6 +291,22 @@ func (app *Config) GETSubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	// subscribe user to plan
+	err = app.Models.Plan.SubscribeUserToPlan(user, *plan)
+	if err != nil {
+		app.ErrorLog.Println("Error subscribing user to plan: ", err)
+		app.Session.Put(r.Context(), "error", "Unable to subscribe to plan")
+		http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
+		return
+	}
+	// update user in session
+	u, err := app.Models.User.GetOne(user.ID) // get fresh data from db
+	if err != nil {
+		app.ErrorLog.Println("Error getting user: ", err)
+		app.Session.Put(r.Context(), "error", "Unable to get user")
+		http.Redirect(w, r, r.URL.Path, http.StatusSeeOther)
+		return
+	}
+	app.Session.Put(r.Context(), "user", u) // update user in session
 
 	// redirect to success page
 	app.Session.Put(r.Context(), "flash", "Subscribed successfully")

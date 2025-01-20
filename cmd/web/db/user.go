@@ -224,21 +224,6 @@ func (u *User) Update(user User) error {
 	return nil
 }
 
-// Delete deletes one user from the database, by User.ID
-func (u *User) Delete() error {
-	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
-	defer cancel()
-
-	stmt := `delete from users where id = $1`
-
-	_, err := db.ExecContext(ctx, stmt, u.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // DeleteByID deletes one user from the database, by ID
 func (u *User) DeleteByID(id int) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)

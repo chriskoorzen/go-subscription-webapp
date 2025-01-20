@@ -52,7 +52,7 @@ func (app *Config) POSTLoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validPassword, err := user.PasswordMatches(password)
+	validPassword, err := app.Models.User.PasswordMatches(password)
 	if err != nil {
 		app.Session.Put(r.Context(), "error", "Invalid credentials") // store error message in session
 		app.ErrorLog.Println("Error comparing passwords: ", err)     // log error
@@ -179,7 +179,7 @@ func (app *Config) GETActivateAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.Active = 1
-	err = u.Update()
+	err = app.Models.User.Update(*u)
 	if err != nil {
 		app.ErrorLog.Println("Unable to update user ", err)
 		app.Session.Put(r.Context(), "error", "Activation failed")

@@ -273,7 +273,7 @@ func (app *Config) GETSubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 		defer app.Wait.Done()
 
 		pdf := app.GenerateManual(user, plan)
-		filePath := fmt.Sprintf("./tmp/%s_%d_manual.pdf", time.Now().Format("2006-01-02-15:04"), user.ID)
+		filePath := fmt.Sprintf("%s/%s_%d_manual.pdf", pathToTmpPDFWrite, time.Now().Format("2006-01-02-15:04"), user.ID)
 		err := pdf.OutputFileAndClose(filePath)
 		if err != nil {
 			app.ErrorChan <- fmt.Errorf("error generating manual: %v", err)

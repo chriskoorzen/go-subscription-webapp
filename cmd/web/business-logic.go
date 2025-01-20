@@ -8,6 +8,9 @@ import (
 	"github.com/phpdave11/gofpdf/contrib/gofpdi"
 )
 
+var pathToManual = "./pdf"
+var pathToTmpPDFWrite = "./tmp"
+
 // For now, this is a dummy function
 // In a real application, this function would generate an invoice
 // using financial data from the user and plan, and accounting for taxes, discounts, etc.
@@ -23,7 +26,7 @@ func (app *Config) GenerateManual(u db.User, plan *db.Plan) *gofpdf.Fpdf {
 
 	pdfImporter := gofpdi.NewImporter()
 
-	pdfTemplate := pdfImporter.ImportPage(pdf, "./pdf/manual.pdf", 1, "/MediaBox")
+	pdfTemplate := pdfImporter.ImportPage(pdf, fmt.Sprintf("%s/manual.pdf", pathToManual), 1, "/MediaBox")
 
 	pdf.AddPage()
 
